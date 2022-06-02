@@ -17,7 +17,7 @@ Regression Project with Kaggle Life Expectancy Dataset
 •	At this point you should have at least 3 models, 2 linear regression models and 1 nonparameteric model.  For each of the three models, provide the primary measure of fit for comparisons:  test ASE or via CV.  You may also include additional metrics for completeness like R squared/Adjusted Rsquared, AIC, and BIC where applicable (remember these are only derived from the training set not the test set).  <br />
 
 
-### Additional details
+## Additional details
 
 NOTE: ALL ANALYSIS MUST BE DONE IN SAS OR R and all code must be placed in the appendix of your report. Python is okay for quick formatting of data and data visualization, but analysis should be in R or SAS. <br />
 
