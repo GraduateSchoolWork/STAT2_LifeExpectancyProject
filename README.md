@@ -34,7 +34,6 @@ The format of your paper (headers, sections, etc) is flexible although should co
 3.Exploratory Data Analysis Required <br />
 
 4.Addressing Objective 1:  Required <br />
-
 •	Restatement of Problem and the overall approach to solve it  <br />
 
 •	Model Selection<br />
@@ -46,8 +45,8 @@ The format of your paper (headers, sections, etc) is flexible although should co
 •	Parameter Interpretation<br />
 	       		Interpretation<br />           
 	       		Confidence Intervals Not Required, but use if beneficial to the discussion.<br />
+			
 5.Addressing Objective 2: Required<br />
-
 •	Restatement of problem and the overall objective  <br />
 
 •	Description of the approach for building a complex regression model.  Feature selection must be used here if only manually model fitting approaches were used 		in Objective 1.<br />
@@ -57,8 +56,8 @@ The format of your paper (headers, sections, etc) is flexible although should co
 •	Comparison of model results  <br />
 			Table of test ASE and any other relevant model fitting metrics. <br />
 			Discussion and insight as to what the results suggest.  Why does one fit better than the other?  Or perhaps why does it appear that all the 			    models appear to be performing about the same? <br />
+			
 6.Final summary Required <br />
-
 •	Quick recap of Objective 1 and Objective 2 findings <br />
 
 •	Provide any additional details and comments on the implications of the models.  Scope of inference?  What other data would this model be good/poor to apply 	    to?   Problems/concerns with the data or data collection? What would you do if you have more time?  What else would you collect? etc.   <br />
