@@ -51,16 +51,35 @@ lifeExpectancy %>%
   select(Life.expectancy, Adult.Mortality, BMI, Schooling, Status, GDP, Alcohol, thinness..1.19.years, Income.composition.of.resources) %>%
   ggpairs(aes(color = Status, alpha = 0.5))
 
+lifeExpectancy %>% 
+  select(Life.expectancy,Adult.Mortality,Schooling,Year,HIV.AIDS,Measles,Diphtheria,infant.deaths,thinness..1.19.years,Status) %>%
+  ggpairs(aes(color = Status, alpha = 0.5))
+
 ggpairs(lifeExpectancy, columns = 2:6)
 ggpairs(lifeExpectancy, columns = 12:16)
 ggpairs(lifeExpectancy, columns = 3:10)
 ggpairs(lifeExpectancy, columns = 12:21)
 
 # look at specific variables 
-ggplot(lifeExpectancy, aes(x=Life.expectancy, fill=Status, alpha = 0.5)) +
-  geom_density()
+ggplot(lifeExpectancy, aes(x=Life.expectancy, fill=Status)) +
+  geom_density(alpha = 0.5) +
+  ggtitle("Distribution of Life Expectancy for Developed and Developing Countries") +
+  theme_classic()
 ggplot(lifeExpectancy, aes(x=Status, y=GDP, fill = Status)) +
-  geom_boxplot()
+  geom_boxplot() +
+  ggtitle("Distribution of GDP for Developed and Developing Countries") +
+  theme_classic()
+ggplot(lifeExpectancy, aes(x=Status, y=Life.expectancy, fill = Status)) +
+  geom_boxplot() +
+  ggtitle("Distribution of Life Expectancy for Developed and Developing Countries") +
+  theme_classic()
+
+ggplot() +
+  geom_density(data = lifeExpectancy, aes(x=HIV.AIDS), fill = "darkorange", alpha = 0.5) +
+  geom_density(data = lifeExpectancy, aes(x=Measles), fill = "darkblue", alpha = 0.5) +
+  geom_density(data = lifeExpectancy, aes(x=Diphtheria), fill = "steelblue", alpha = 0.5) +
+  xlim(0,10)
+  
 
 # determine the specific mean and median GDP for developing and developed countries
 developed <- lifeExpectancy %>% filter(Status == "Developed")
