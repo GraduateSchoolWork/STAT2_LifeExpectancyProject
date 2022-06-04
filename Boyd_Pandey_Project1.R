@@ -72,7 +72,7 @@ lifeExpectancy <- lifeExpectancy[,-1] # Removing Country
 
 # Make linear regression model to check for VIFs
 VIFmodel <- lm(Life.expectancy~.,data=lifeExpectancy)
-vif(VIFmodel)[,3]^2 # Really high VIF for infant.deaths (213.611125) and under.five.deaths (203.591539)
+vif(VIFmodel) # Really high VIF for infant.deaths (213.611125) and under.five.deaths (203.591539)
 
 # linear regression model after removing infant.deaths to check for VIFs
 lifeExpectancy <- lifeExpectancy[,-5] # Removing infant.deaths
@@ -87,12 +87,14 @@ lifeExpectancy <- lifeExpectancy[,-16] # Removing thinness.1.19
 VIFmodel <- lm(Life.expectancy~.,data=lifeExpectancy)
 vif(VIFmodel) # All VIFs way under 10 now
 
+#lifeExpectancy <- lifeExpectancy[,c(-1,-6,-17,-19)]
+
+
 # Check summary statistics
 summary(VIFmodel)
 
 
 # Objective 1: Build regression models and identify key relationships and observe those relationships.
-
 
 splitPerc = .85
 trainIndices = sample(1:dim(lifeExpectancy)[1],round(splitPerc * dim(lifeExpectancy)[1]))
@@ -104,13 +106,14 @@ model1 <- lm(Life.expectancy~.,data=train)
 summary(model1)
 plot(model1)
 
-# run step-wise model selection
+# Stepwise feature selection
 m3 <- ols_step_both_p(model1)
 m3
 plot(m3)
 
-# this model is what came out from the step-wise model
+# Model from Stepwise feature selection
 
+#model2 <- lm(Life.expectancy~Adult.Mortality+Income.composition.of.resources+Schooling+HIV.AIDS+Diphtheria+percentage.expenditure+BMI+Polio+Status+under.five.deaths,data=train)
 model2 <- lm(Life.expectancy~Adult.Mortality+Income.composition.of.resources+Schooling+HIV.AIDS+Diphtheria+percentage.expenditure+BMI+Polio+Status+Measles,data=train) # Added by Shikha
 summary(model2)
 plot(model2)
@@ -137,8 +140,50 @@ ggplot() +
 
 
 
+################################################################################
+library(leaps)
+reg.fwd <- regsubsets(Life.expectancy~.,data = train, method = "exhaustive", nvmax = 18)
+coef(reg.fwd,11)
 
+# summary statistics from forward model
+par(mfrow=c(1,3))
+bics<-summary(reg.fwd)$bic
+plot(1:17,bics,type="l",ylab="BIC",xlab="# of predictors")
+index<-which(bics==min(bics))
+points(index,bics[index],col="red",pch=10)
 
+adjr2<-summary(reg.fwd)$adjr2
+plot(1:17,adjr2,type="l",ylab="Adjusted R-squared",xlab="# of predictors")
+index<-which(adjr2==max(adjr2))
+points(index,adjr2[index],col="red",pch=10)
 
+rss<-summary(reg.fwd)$rss
+plot(1:17,rss,type="l",ylab="train RSS",xlab="# of predictors")
+index<-which(rss==min(rss))
+points(index,rss[index],col="red",pch=10)
+
+################################################################################
+
+#Really handy predict function
+predict.regsubsets =function (object , newdata ,id ,...){
+  form=as.formula (object$call [[2]])
+  mat=model.matrix(form ,newdata )
+  coefi=coef(object ,id=id)
+  xvars=names(coefi)
+  mat[,xvars]%*%coefi
+}
+
+testASE<-c()
+#note my index is to 20 since that what I set it in regsubsets
+for (i in 1:20){
+  predictions<-predict.regsubsets(object=reg.fwd,newdata=test,id=i) 
+  testASE[i]<-mean((test$Life.expectancy-predictions)^2)
+}
+par(mfrow=c(1,1))
+plot(1:20,testASE,type="l",xlab="# of predictors",ylab="test vs train ASE")#,ylim=c(0.3,0.8))
+index<-which(testASE==min(testASE))
+points(index,testASE[index],col="red",pch=10)
+rss<-summary(reg.fwd)$rss
+lines(1:20,rss/257,lty=3,col="blue")  #Dividing by 100 since ASE=RSS/sample size
 
 

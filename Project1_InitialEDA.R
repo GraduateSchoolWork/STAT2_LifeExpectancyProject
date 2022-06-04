@@ -10,17 +10,25 @@ library(GGally)
 library(leaps)
 library(olsrr)
 library(car)
+library(naniar) #Added by Shikha
 
 # load and look at the data
-lifeExpectancy <- read.csv("~/SMU/Classes/Applied Statistics II/Project/Life Expectancy Data.csv")
+#lifeExpectancy <- read.csv("~/SMU/Classes/Applied Statistics II/Project/Life Expectancy Data.csv") # Commented by Shikha
+lifeExpectancy <- read.csv("Life Expectancy Data.csv", header = T) #Added by Shikha
 head(lifeExpectancy, n=30)
 summary(lifeExpectancy)
 str(lifeExpectancy)
+
+t(aggregate(Life.expectancy~Status,data=lifeExpectancy,summary)) #Added by Shikha
 
 # look at some of the na's
 lifeExpectancy[which(is.na(lifeExpectancy$Alcohol)),]
 lifeExpectancy[which(is.na(lifeExpectancy$Population)),]
 lifeExpectancy[which(is.na(lifeExpectancy$GDP)),]
+
+#Looking for missing values in dataset - Added by Shikha
+gg_miss_var(lifeExpectancy) + labs(title = 'Missing Values', x = 'Dataset Columns')
+sapply(lifeExpectancy, function(x) sum(is.na(x)))
 
 # omit na's if needed ??????????
 lifeExpectancy <- na.omit(lifeExpectancy)
@@ -78,7 +86,8 @@ ggplot() +
   geom_density(data = lifeExpectancy, aes(x=HIV.AIDS), fill = "darkorange", alpha = 0.5) +
   geom_density(data = lifeExpectancy, aes(x=Measles), fill = "darkblue", alpha = 0.5) +
   geom_density(data = lifeExpectancy, aes(x=Diphtheria), fill = "steelblue", alpha = 0.5) +
-  xlim(0,10)
+  xlim(0,10) +
+  theme_classic() #Added by Shikha
   
 
 # determine the specific mean and median GDP for developing and developed countries
@@ -89,9 +98,41 @@ median(developed$GDP)
 mean(developing$GDP)
 median(developing$GDP)
 
+summary(developed$GDP) #Added by Shikha
+summary(developing$GDP) #Added by Shikha
+
 # calculate pearson correlation between specific variables
 cor.test(lifeExpectancy$Life.expectancy, lifeExpectancy$Alcohol, method = "pearson")
 
+#######################################################
+#############  Start - Added by Shikha  ###############
+#######################################################
+
+# Calculate correlation matrix
+lifeExpectancy <- lifeExpectancy[,-c(1)] # Removing Country, Status
+cor(lifeExpectancy)
+# Only under.five.deaths and infant.deaths are highly correlated
+
+# make linear regression model to check for VIFs
+VIFmodel <- lm(Life.expectancy~.,data=lifeExpectancy)
+vif(VIFmodel) # Really high VIF for infant.deaths (213.609554) and under.five.deaths (203.591034)
+
+# linear regression model after removing infant.deaths to check for VIFs
+lifeExpectancy <- lifeExpectancy[,-4] # Removing infant.deaths
+VIFmodel <- lm(Life.expectancy~.,data=lifeExpectancy)
+vif(VIFmodel) # GDP is still at 13.647857 > 10
+
+lifeExpectancy <- lifeExpectancy[,-14] # Removing GDP
+VIFmodel <- lm(Life.expectancy~.,data=lifeExpectancy)
+vif(VIFmodel) # All VIFs under 10 now but lets take out thinness.1.19 as well
+
+lifeExpectancy <- lifeExpectancy[,-15] # Removing GDP
+VIFmodel <- lm(Life.expectancy~.,data=lifeExpectancy)
+vif(VIFmodel) # All VIFs under 10 now
+
+#######################################################
+##############  End - Added by Shikha  ###############
+######################################################
 
 ################################################################################
 ################################################################################
@@ -100,7 +141,8 @@ cor.test(lifeExpectancy$Life.expectancy, lifeExpectancy$Alcohol, method = "pears
 ################################################################################
 
 # Objective 1: Build regression models and identify key relationships and observe those relationships.
-lifeExpectancy <- read.csv("~/SMU/Classes/Applied Statistics II/Project/Life Expectancy Data.csv")
+#lifeExpectancy <- read.csv("~/SMU/Classes/Applied Statistics II/Project/Life Expectancy Data.csv") # Commented by Shikha
+lifeExpectancy <- read.csv("Life Expectancy Data.csv", header = T) #Added by Shikha
 
 splitPerc = .85
 trainIndices = sample(1:dim(lifeExpectancy)[1],round(splitPerc * dim(lifeExpectancy)[1]))
@@ -126,7 +168,8 @@ m3
 plot(m3)
 
 # this model is what came out from the step-wise model
-model2 <- lm(Life.expectancy~Adult.Mortality+Schooling+Year+HIV.AIDS+Measles+Diphtheria+infant.deaths+thinness..1.19.years,data=train)
+#model2 <- lm(Life.expectancy~Adult.Mortality+Schooling+Year+HIV.AIDS+Measles+Diphtheria+infant.deaths+thinness..1.19.years,data=train) # Commented by Shikha
+model2 <- lm(Life.expectancy~Adult.Mortality+Income.composition.of.resources+Schooling+HIV.AIDS+Diphtheria+percentage.expenditure+BMI+Polio+under.five.deaths,data=train) # Added by Shikha
 summary(model2)
 plot(model2)
 vif(model2)
@@ -138,13 +181,14 @@ plot(model3)
 
 # model metrics
 hist(model2$residuals, col = "darkslateblue", main = "Histogram of Residuals")
-sqrt(sum((model2$residuals)^2))
+sqrt(sum((model2$residuals)^2)) # Just the comment added by Shikha - value for this is 187.0329
 
 # predictions
 preds <- predict(model2, newdata = test, interval = "prediction")
 preds <- as.data.frame(preds)
 test$Life.expectancy2 <- preds[,1]
-preds2 <- test[,c(2,4,23)]
+#preds2 <- test[,c(2,4,23)] # Commented by Shikha
+preds2 <- test[,c(2,18)] # Added by Shikha
 head(preds2)
 
 ggplot() +
@@ -165,7 +209,8 @@ library(leaps)
 # run forward selection with different function
 train <- train[,-3]
 test <- test[,-3]
-reg.fwd <- regsubsets(Life.expectancy~.,data = train, method = "forward", nvmax = 20)
+#reg.fwd <- regsubsets(Life.expectancy~.,data = train, method = "forward", nvmax = 20) # Commented by Shikha
+reg.fwd <- regsubsets(Life.expectancy~.,data = train, method = "forward", nvmax = 18) # Added by Shikha
 
 # summary statistics from forward model
 par(mfrow=c(1,3))
