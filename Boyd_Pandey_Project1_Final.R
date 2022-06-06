@@ -11,6 +11,7 @@ library(leaps)
 library(olsrr)
 library(car)
 library(naniar)
+library(forecast)
 
 # load and look at the data
 lifeExpectancy <- read.csv("Life Expectancy Data.csv", header = T)
@@ -22,7 +23,6 @@ str(lifeExpectancy)
 gg_miss_var(lifeExpectancy) + labs(title = 'Missing Values', x = 'Dataset Columns')
 sapply(lifeExpectancy, function(x) sum(is.na(x)))
 
-
 ################################################################################
 ################################################################################
 ##################################      EDA     ################################
@@ -30,11 +30,11 @@ sapply(lifeExpectancy, function(x) sum(is.na(x)))
 ################################################################################
 
 lifeExpectancy %>% 
-  select(Life.expectancy, Adult.Mortality, BMI, Schooling, Status, GDP, Alcohol, thinness..1.19.years, Income.composition.of.resources) %>%
-  ggpairs(aes(color = Status, alpha = 0.5))
+  select(Life.expectancy, Adult.Mortality, BMI, Schooling, Status, GDP, Alcohol, thinness..1.19.years, Income.composition.of.resources, under.five.deaths, infant.deaths) %>%
+  ggpairs(aes( alpha = 0.5))
 
 lifeExpectancy %>% 
-  select(Life.expectancy,Adult.Mortality,Schooling,Year,HIV.AIDS,Measles,Diphtheria,infant.deaths,thinness..1.19.years,Status) %>%
+  select(Life.expectancy,Adult.Mortality,BMI,Status,Income.composition.of.resources,Year,HIV.AIDS,Measles,Diphtheria,thinness..1.19.years) %>%
   ggpairs(aes(color = Status, alpha = 0.5))
 
 
@@ -51,16 +51,20 @@ ggplot(lifeExpectancy, aes(x=Status, y=Life.expectancy, fill = Status)) +
   geom_boxplot() +
   ggtitle("Distribution of Life Expectancy for Developed and Developing Countries") +
   theme_classic()
-
+ggplot(lifeExpectancy, aes(x=GDP, fill=Status)) +
+  geom_density(alpha = 0.5) +
+  ggtitle("Distribution of GDP for Developed and Developing Countries") +
+  theme_classic()
 
 ggplot() +
-  geom_density(data = lifeExpectancy, aes(x=HIV.AIDS), fill = "darkorange",color = "darkorange", alpha = 0.5, size = 1) +
+  geom_density(data = lifeExpectancy, aes(x=HIV.AIDS), fill = "red3",color = "red3", alpha = 0.5, size = 1) +
+  geom_density(data = lifeExpectancy, aes(x=Hepatitis.B), fill = "darkorange",color = "darkorange", alpha = 0.5, size = 1) +
   geom_density(data = lifeExpectancy, aes(x=Measles), fill = "darkblue", color = "darkblue", alpha = 0.5, size = 1) +
   geom_density(data = lifeExpectancy, aes(x=Polio), fill = "green",color = "green", alpha = 0.5, size = 1) +
   geom_density(data = lifeExpectancy, aes(x=Diphtheria), fill = "steelblue", color = "steelblue", alpha = 0.5, size = 1) +
-  xlim(0,10) +
-  labs(title = "HIV/AIDS, Measles, Diptheria, and Polio Distributions",
-       caption = " HIV/AIDS = Orange, Measles = Dark Blue, Diptheria = Light Blue, Polio = Green") +
+  xlim(0,15) +
+  labs(title = "HIV/AIDS, Measles, Diptheria, Hepatitis B, and Polio Distributions",
+       caption = " HIV/AIDS = Red, Measles = Dark Blue, Diptheria = Light Blue, Hepatitis B = Orange, Polio = Green") +
   xlab("Diseases") +
   theme_classic()
 
@@ -151,6 +155,7 @@ ggplot() +
 ###########################      Objective 2.1     #############################
 ################################################################################
 ################################################################################
+lifeExpectancy <- read.csv("Life Expectancy Data.csv", header = T)
 set.seed(5)
 splitPerc = .85
 trainIndices = sample(1:dim(lifeExpectancy)[1],round(splitPerc * dim(lifeExpectancy)[1]))
@@ -171,7 +176,7 @@ ggplot() +
 
 # Schooling
 ggplot() +
-  geom_density(data = lifeExpectancy, aes(x=(Schooling)), fill = "darkblue", alpha = 0.5)
+  geom_density(data = lifeExpectancy, aes(x=Schooling), fill = "darkblue", alpha = 0.5)
 
 
 # run complex model
@@ -188,7 +193,7 @@ sqrt(sum((model2$residuals)^2)) # Just the comment added by Shikha - value for t
 preds <- predict(model2, newdata = test, interval = "prediction")
 preds <- as.data.frame(preds)
 test$Life.expectancy2 <- preds[,1]
-preds2 <- test[,c(3,19)]
+preds2 <- test[,c(4,23)]
 head(preds2)
 
 # plot the observed and predicted
@@ -198,6 +203,18 @@ ggplot() +
   ggtitle("Predictions vs Actual Values") +
   xlab("Life Expectancy") +
   theme_classic()
+
+# The mean squared error (MSE) is the mean of the square of the residuals:
+  
+  # Mean squared error
+  mse <- mean(residuals(model2)^2)
+mse
+
+# Root mean squared error (RMSE) is then the square root of MSE:
+  
+  # Root mean squared error
+  rmse <- sqrt(mse)
+rmse
 
 
 ################################################################################
@@ -287,7 +304,7 @@ rmse = caret::RMSE(test_y, pred_y)
 
 cat("MSE: ", mse, "MAE: ", mae, " RMSE: ", rmse)
 
-
+cv(pred_y)
 
 # plot knn regression
 x = 1:length(test_y)
